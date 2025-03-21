@@ -1,0 +1,32 @@
+/* static/css/detail.css */
+.comment, .reply {
+    border-bottom: 1px solid #eee;
+    padding: 10px 0;
+}
+
+.comment-actions {
+    margin-top: 5px;
+}
+
+.comment-actions button, .comment-actions a {
+    margin-right: 10px;
+}
+
+.expand-replies {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.expand-replies:hover {
+    background-color: #45a049;
+}
+
+.expand-replies:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}

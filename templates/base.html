@@ -1,0 +1,87 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        header { background: #f8f8f8; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .user-section { display: flex; align-items: center; gap: 15px; }
+        .user-section input[type="text"] { padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
+
+        /* 左右布局样式（非首页） */
+        .container { display: flex; min-height: calc(100vh - 60px); }
+        .sidebar { width: 250px; background: #f8f8f8; padding: 20px; }
+        .sidebar nav a { display: block; margin-bottom: 10px; text-decoration: none; color: #333; }
+        .sidebar .popular { margin-top: 20px; }
+        .sidebar .popular h3 { margin-bottom: 10px; }
+        .sidebar .popular a { display: block; margin-bottom: 5px; text-decoration: none; color: #555; }
+        .content { flex: 1; padding: 20px; }
+
+        /* 上下布局样式（首页） */
+        .home-nav { background: #f8f8f8; padding: 10px; text-align: center; }
+        .home-nav a { margin: 0 15px; text-decoration: none; color: #333; }
+        .home-content { padding: 20px; }
+
+        footer { background: #f8f8f8; padding: 10px; text-align: center; }
+        .article { margin-bottom: 20px; }
+        .comment-form textarea { width: 100%; height: 100px; }
+        .comment { border-bottom: 1px solid #ddd; padding: 10px 0; }
+        .comment-actions a { margin-right: 10px; color: #555; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="logo">我的博客</div>
+    <div class="user-section">
+        <span>{{.UserStatus}}</span>
+        <input type="text" placeholder="搜索...">
+        <span>{{.CurrentTime.Format "2006-01-02 15:04:05"}}</span>
+    </div>
+</header>
+
+{{if .IsHomePage}}
+<!-- 首页布局：横向导航栏 + 内容 -->
+<div class="home-nav">
+    {{range .NavItems}}
+    <a href="{{.Link}}">{{.Name}}</a>
+    {{end}}
+</div>
+<div class="home-content">
+    {{template "content" .}}
+</div>
+{{else}}
+<!-- 非首页布局：左右排版 -->
+<div class="container">
+    <div class="sidebar">
+        <nav>
+            {{range .NavItems}}
+            <a href="{{.Link}}">{{.Name}}</a>
+            {{end}}
+        </nav>
+        <div class="popular">
+            <h3>最近热门文章</h3>
+            {{if .PopularArticles}}
+            {{range .PopularArticles}}
+            <a href="/blog/detail?id={{.ID}}">{{.Title}} ({{.Views}} 阅读)</a>
+            {{end}}
+            {{else}}
+            <p>暂无热门文章</p>
+            {{end}}
+        </div>
+    </div>
+    <div class="content">
+        {{template "content" .}}
+    </div>
+</div>
+{{end}}
+
+<footer>
+    <p>© 2025 我的博客</p>
+</footer>
+</body>
+</html>
+{{end}}

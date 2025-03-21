@@ -1,0 +1,75 @@
+{{define "content"}}
+<!-- 引入 CSS -->
+<link rel="stylesheet" href="/static/css/list.css">
+
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>{{.Title}}</h1>
+    <a href="/blog/edit" class="button">发表博客</a>
+</div>
+
+<div style="display: flex; justify-content: space-between;">
+    <!-- 文章列表 -->
+    <div class="articles" style="flex: 3;">
+        {{range .Articles}}
+        <div class="article">
+            <h2><a href="/blog/detail?id={{.ID}}">{{.Title}}</a></h2>
+            <p>{{.Summary}}</p>
+            <p>发布于: {{.CreatedAt.Format "2006-01-02 15:04:05"}}</p>
+        </div>
+        {{end}}
+    </div>
+
+    <!-- 排序下拉框 -->
+    <div class="sort-dropdown" style="flex: 1; margin-left: 20px;">
+        <h3>排序</h3>
+        <select id="sort-select" onchange="window.location.href=this.value">
+            <option value="/blog?page={{.Page}}&sort_by=created_at&order=DESC" {{if and (eq .SortBy "created_at") (eq .Order "DESC")}}selected{{end}}>
+            按发布时间（降序）
+            </option>
+            <option value="/blog?page={{.Page}}&sort_by=created_at&order=ASC" {{if and (eq .SortBy "created_at") (eq .Order "ASC")}}selected{{end}}>
+            按发布时间（升序）
+            </option>
+            <option value="/blog?page={{.Page}}&sort_by=updated_at&order=DESC" {{if and (eq .SortBy "updated_at") (eq .Order "DESC")}}selected{{end}}>
+            按更新时间（降序）
+            </option>
+            <option value="/blog?page={{.Page}}&sort_by=updated_at&order=ASC" {{if and (eq .SortBy "updated_at") (eq .Order "ASC")}}selected{{end}}>
+            按更新时间（升序）
+            </option>
+            <option value="/blog?page={{.Page}}&sort_by=latest_comment&order=DESC" {{if and (eq .SortBy "latest_comment") (eq .Order "DESC")}}selected{{end}}>
+            按最新评论（降序）
+            </option>
+            <option value="/blog?page={{.Page}}&sort_by=latest_comment&order=ASC" {{if and (eq .SortBy "latest_comment") (eq .Order "ASC")}}selected{{end}}>
+            按最新评论（升序）
+            </option>
+            <option value="/blog?page={{.Page}}&sort_by=views&order=DESC" {{if and (eq .SortBy "views") (eq .Order "DESC")}}selected{{end}}>
+            按阅读量（降序）
+            </option>
+            <option value="/blog?page={{.Page}}&sort_by=views&order=ASC" {{if and (eq .SortBy "views") (eq .Order "ASC")}}selected{{end}}>
+            按阅读量（升序）
+            </option>
+            <option value="/blog?page={{.Page}}&sort_by=likes&order=DESC" {{if and (eq .SortBy "likes") (eq .Order "DESC")}}selected{{end}}>
+            按点赞数（降序）
+            </option>
+            <option value="/blog?page={{.Page}}&sort_by=likes&order=ASC" {{if and (eq .SortBy "likes") (eq .Order "ASC")}}selected{{end}}>
+            按点赞数（升序）
+            </option>
+            <option value="/blog?page={{.Page}}&sort_by=comment_count&order=DESC" {{if and (eq .SortBy "comment_count") (eq .Order "DESC")}}selected{{end}}>
+            按评论数量（降序）
+            </option>
+            <option value="/blog?page={{.Page}}&sort_by=comment_count&order=ASC" {{if and (eq .SortBy "comment_count") (eq .Order "ASC")}}selected{{end}}>
+            按评论数量（升序）
+            </option>
+        </select>
+    </div>
+</div>
+
+<div class="pagination">
+    {{if gt .Page 1}}
+    <a href="/blog?page={{sub .Page 1}}&sort_by={{.SortBy}}&order={{.Order}}">上一页</a>
+    {{end}}
+    <span>第 {{.Page}} 页 / 共 {{.Total}} 页</span>
+    {{if lt .Page .Total}}
+    <a href="/blog?page={{add .Page 1}}&sort_by={{.SortBy}}&order={{.Order}}">下一页</a>
+    {{end}}
+</div>
+{{end}}

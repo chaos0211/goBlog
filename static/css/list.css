@@ -1,0 +1,59 @@
+/* static/css/list.css */
+.button {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    margin: 5px 0;
+}
+
+.button:hover {
+    background-color: #45a049;
+}
+
+.sort-dropdown {
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}
+
+.sort-dropdown h3 {
+    margin-top: 0;
+    font-size: 16px;
+}
+
+.sort-dropdown select {
+    width: 100%;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+}
+
+.sort-dropdown select:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.articles {
+    padding-right: 20px;
+}
+
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: #4CAF50;
+}
+
+.pagination a:hover {
+    text-decoration: underline;
+}

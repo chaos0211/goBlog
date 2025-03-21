@@ -1,0 +1,39 @@
+.edit-form div {
+    margin-bottom: 15px;
+}
+.edit-form label {
+    display: block;
+    margin-bottom: 5px;
+}
+.edit-form input[type="text"],
+.edit-form textarea {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+.edit-form textarea#summary {
+    height: 250px;
+}
+.edit-form textarea#content {
+    height: 500px;
+}
+.edit-form .button-group {
+    display: flex;
+    gap: 10px;
+}
+.edit-form button,
+.edit-form a.button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+}
+.edit-form button {
+    background-color: #4CAF50;
+}
+.edit-form a.button {
+    background-color: #f44336;
+}

@@ -1,0 +1,179 @@
+{{define "content"}}
+<!-- 引入 CSS -->
+<link rel="stylesheet" href="/static/css/detail.css">
+
+<div class="article">
+    <h1>{{.Article.Title}}</h1>
+    <p>{{.Article.Content}}</p>
+    <p>作者: {{.Article.Author}}</p>
+    <p>上传时间: {{.Article.CreatedAt.Format "2006-01-02 15:04:05"}}</p>
+    <p>更新时间: {{.Article.UpdatedAt.Format "2006-01-02 15:04:05"}}</p>
+    <button class="like-article" data-id="{{.Article.ID}}">点赞 (<span class="like-count">{{.Article.Likes}}</span>)</button>
+    <a href="/blog/edit?id={{.Article.ID}}" class="edit-button">编辑</a>
+</div>
+<div class="comment-form">
+    <h3>发表评论</h3>
+    <form method="POST" action="/blog/comment">
+        <input type="hidden" name="article_id" value="{{.Article.ID}}">
+        <div>
+            <label for="username">用户名:</label>
+            <input type="text" id="username" name="username" placeholder="匿名用户">
+        </div>
+        <div>
+            <label for="content">评论内容:</label>
+            <textarea id="content" name="content" required></textarea>
+        </div>
+        <button type="submit">提交</button>
+    </form>
+</div>
+<div class="comments">
+    <h3>评论区</h3>
+    {{if .Article.Comments}}
+    {{range .Article.Comments}}
+    <div class="comment">
+        <p>{{.Content}}</p>
+        <p>用户: {{.Username}}</p>
+        <p>评论时间: {{.CreatedAt.Format "2006-01-02 15:04:05"}}</p>
+        <p>调试: 该评论有 {{len .Replies}} 条回复</p>
+        <div class="comment-actions">
+            <button class="like-comment" data-id="{{.ID}}">点赞 (<span class="like-count">{{.Likes}}</span>)</button>
+            <button class="dislike-comment" data-id="{{.ID}}">踩 (<span class="dislike-count">{{.Dislikes}}</span>)</button>
+            <a href="#" class="reply-link" onclick="document.getElementById('reply-form-{{.ID}}').style.display='block'; return false;">回复</a>
+        </div>
+        <div id="reply-form-{{.ID}}" style="display: none; margin-left: 20px;">
+            <form method="POST" action="/blog/comment">
+                <input type="hidden" name="article_id" value="{{$.Article.ID}}">
+                <input type="hidden" name="parent_id" value="{{.ID}}">
+                <div>
+                    <label for="username-{{.ID}}">用户名:</label>
+                    <input type="text" id="username-{{.ID}}" name="username" placeholder="匿名用户">
+                </div>
+                <div>
+                    <label for="content-{{.ID}}">评论内容:</label>
+                    <textarea id="content-{{.ID}}" name="content" required></textarea>
+                </div>
+                <button type="submit">提交回复</button>
+            </form>
+        </div>
+        <!-- 回复区域 -->
+        {{if gt (len .Replies) 0}}
+        <div class="replies" id="replies-{{.ID}}">
+            <!-- 默认只显示两条回复（按点赞数排序，或按时间排序） -->
+            {{range $index, $reply := .Replies}}
+            {{if lt $index 2}}
+            <div class="reply" style="margin-left: 40px;" id="reply-{{.ID}}">
+                <p>{{.Content}}</p>
+                <p>用户: {{.Username}}</p>
+                <p>回复时间: {{.CreatedAt.Format "2006-01-02 15:04:05"}}</p>
+                <div class="comment-actions">
+                    <button class="like-comment" data-id="{{.ID}}">点赞 (<span class="like-count">{{.Likes}}</span>)</button>
+                    <button class="dislike-comment" data-id="{{.ID}}">踩 (<span class="dislike-count">{{.Dislikes}}</span>)</button>
+                    <a href="#" class="reply-link" onclick="document.getElementById('reply-form-{{.ID}}').style.display='block'; return false;">回复</a>
+                </div>
+                <div id="reply-form-{{.ID}}" style="display: none; margin-left: 20px;">
+                    <form method="POST" action="/blog/comment">
+                        <input type="hidden" name="article_id" value="{{$.Article.ID}}">
+                        <input type="hidden" name="parent_id" value="{{.ID}}">
+                        <div>
+                            <label for="username-{{.ID}}">用户名:</label>
+                            <input type="text" id="username-{{.ID}}" name="username" placeholder="匿名用户">
+                        </div>
+                        <div>
+                            <label for="content-{{.ID}}">回复内容:</label>
+                            <textarea id="content-{{.ID}}" name="content" required></textarea>
+                        </div>
+                        <button type="submit">提交回复</button>
+                    </form>
+                </div>
+                <!-- 嵌套回复（递归显示，默认也只显示两条） -->
+                {{if gt (len .Replies) 0}}
+                <div class="replies" id="replies-{{.ID}}">
+                    {{range $nestedIndex, $nestedReply := .Replies}}
+                    {{if lt $nestedIndex 2}}
+                    <div class="reply" style="margin-left: 80px;" id="reply-{{.ID}}">
+                        <p>{{.Content}}</p>
+                        <p>用户: {{.Username}}</p>
+                        <p>回复时间: {{.CreatedAt.Format "2006-01-02 15:04:05"}}</p>
+                        <div class="comment-actions">
+                            <button class="like-comment" data-id="{{.ID}}">点赞 (<span class="like-count">{{.Likes}}</span>)</button>
+                            <button class="dislike-comment" data-id="{{.ID}}">踩 (<span class="dislike-count">{{.Dislikes}}</span>)</button>
+                            <a href="#" class="reply-link" onclick="document.getElementById('reply-form-{{.ID}}').style.display='block'; return false;">回复</a>
+                        </div>
+                        <div id="reply-form-{{.ID}}" style="display: none; margin-left: 20px;">
+                            <form method="POST" action="/blog/comment">
+                                <input type="hidden" name="article_id" value="{{$.Article.ID}}">
+                                <input type="hidden" name="parent_id" value="{{.ID}}">
+                                <div>
+                                    <label for="username-{{.ID}}">用户名:</label>
+                                    <input type="text" id="username-{{.ID}}" name="username" placeholder="匿名用户">
+                                </div>
+                                <div>
+                                    <label for="content-{{.ID}}">回复内容:</label>
+                                    <textarea id="content-{{.ID}}" name="content" required></textarea>
+                                </div>
+                                <button type="submit">提交回复</button>
+                            </form>
+                        </div>
+                    </div>
+                    {{end}}
+                    {{end}}
+                    {{if gt (len .Replies) 2}}
+                    <button class="expand-replies" onclick="expandReplies('{{.ID}}', {{len .Replies}})">展开 {{len .Replies}} 条回复</button>
+                    {{end}}
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+            {{end}}
+            {{if gt (len .Replies) 2}}
+            <button class="expand-replies" onclick="expandReplies('{{.ID}}', {{len .Replies}})">展开 {{len .Replies}} 条回复</button>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+    {{end}}
+    {{else}}
+    <p>暂无评论</p>
+    {{end}}
+</div>
+
+<!-- 定义 allReplies 和 articleId -->
+<script>
+    var articleId = {{.Article.ID}};
+    var allReplies = {};
+    {{if .Article.Comments}}
+    {{range $comment := .Article.Comments}}
+    {{if $comment.Replies}}
+    allReplies["{{$comment.ID}}"] = [
+        {{range $reply := $comment.Replies}}
+    {
+        id: {{$reply.ID}},
+        content: "{{$reply.Content | js}}",
+            username: "{{$reply.Username | js}}",
+        createdAt: "{{$reply.CreatedAt.Format "2006-01-02 15:04:05"}}",
+        likes: {{$reply.Likes}},
+        dislikes: {{$reply.Dislikes}},
+        replies: [
+            {{range $nestedReply := $reply.Replies}}
+        {
+            id: {{$nestedReply.ID}},
+            content: "{{$nestedReply.Content | js}}",
+                username: "{{$nestedReply.Username | js}}",
+            createdAt: "{{$nestedReply.CreatedAt.Format "2006-01-02 15:04:05"}}",
+            likes: {{$nestedReply.Likes}},
+            dislikes: {{$nestedReply.Dislikes}},
+            replies: []
+        }{{if not (eq $nestedReply.ID (index $reply.Replies (sub (len $reply.Replies) 1)).ID)}},{{end}}
+        {{end}}
+    ]
+    }{{if not (eq $reply.ID (index $comment.Replies (sub (len $comment.Replies) 1)).ID)}},{{end}}
+    {{end}}
+    ];
+    {{end}}
+    {{end}}
+    {{end}}
+</script>
+
+<!-- 引入 JavaScript -->
+<script src="/static/js/detail.js"></script>
+{{end}}
