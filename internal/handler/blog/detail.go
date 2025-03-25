@@ -42,7 +42,7 @@ func DetailHandler(c *gin.Context) {
 		IsHomePage:      false,
 	}
 
-	c.HTML(http.StatusOK, "base.html", data) // 改为渲染 "base.html"
+	c.HTML(http.StatusOK, "base.html", data) // 改为 "base.html"
 }
 
 func CommentHandler(c *gin.Context) {
