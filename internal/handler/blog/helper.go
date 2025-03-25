@@ -1,11 +1,21 @@
 package blog
 
-// 辅助函数：计算 a - b
+import (
+	"html/template"
+	"github.com/gin-gonic/gin"
+)
+
+func RegisterTemplateFuncs(r *gin.Engine) {
+	r.SetFuncMap(template.FuncMap{
+		"sub": sub,
+		"add": add,
+	})
+}
+
 func sub(a, b int) int {
 	return a - b
 }
 
-// 辅助函数：计算 a + b
 func add(a, b int) int {
 	return a + b
 }

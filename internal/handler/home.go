@@ -1,16 +1,16 @@
 package handler
 
 import (
-	"bytes"
-	"fmt"
-	"html/template"
 	"net/http"
-	"scsPro/internal/model"
 	"time"
+
+	"scsPro/internal/common"
+	"scsPro/internal/model"
+	"github.com/gin-gonic/gin"
 )
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	modules := []Module{
+func HomeHandler(c *gin.Context) {
+	modules := []common.Module{
 		{Name: "个人简介", Description: "关于我的基本信息", Link: "/about"},
 		{Name: "博客", Description: "我的文章", Link: "/blog"},
 		{Name: "技能", Description: "我的技术栈", Link: "/skills"},
@@ -21,17 +21,18 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		{Name: "联系我", Description: "与我联系", Link: "/contact"},
 	}
 
-	commonData, err := GetCommonData()
+	commonData, err := common.GetCommonData()
 	if err != nil {
-		fmt.Println("获取公共数据失败:", err)
-		http.Error(w, "获取公共数据失败: "+err.Error(), http.StatusInternalServerError)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "获取公共数据失败: " + err.Error(),
+		})
 		return
 	}
 
 	data := struct {
 		Title           string
-		Modules         []Module
-		NavItems        []Module
+		Modules         []common.Module
+		NavItems        []common.Module
 		PopularArticles []model.Article
 		UserStatus      string
 		CurrentTime     time.Time
@@ -39,29 +40,13 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}{
 		Title:           "首页",
 		Modules:         modules,
-		NavItems:        commonData["NavItems"].([]Module),
+		NavItems:        commonData["NavItems"].([]common.Module),
 		PopularArticles: commonData["PopularArticles"].([]model.Article),
 		UserStatus:      commonData["UserStatus"].(string),
 		CurrentTime:     commonData["CurrentTime"].(time.Time),
-		IsHomePage:      true, // 标记为首页
+		IsHomePage:      true,
 	}
 
-	//fmt.Printf("Modules: %+v\n", modules)
-
-	tmpl, err := template.ParseFiles("templates/base.html", "templates/home.html")
-	if err != nil {
-		fmt.Println("模板加载失败:", err)
-		http.Error(w, "模板加载失败: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, "base", data)
-	if err != nil {
-		fmt.Println("模板渲染失败:", err)
-		http.Error(w, "模板渲染失败: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Write(buf.Bytes())
+	// 渲染 base.html，而不是 home.html
+	c.HTML(http.StatusOK, "base.html", data)
 }

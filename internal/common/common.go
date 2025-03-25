@@ -1,16 +1,18 @@
-package handler
+package common
 
 import (
 	"scsPro/internal/model"
 	"time"
 )
 
+// Module 定义导航或模块项的结构
 type Module struct {
 	Name        string
 	Description string
 	Link        string
 }
 
+// NavItems 全局导航项
 var NavItems = []Module{
 	{Name: "首页", Link: "/"},
 	{Name: "博客", Link: "/blog"},
@@ -23,6 +25,7 @@ var NavItems = []Module{
 	{Name: "联系我", Link: "/contact"},
 }
 
+// GetCommonData 获取页面公共数据
 func GetCommonData() (map[string]interface{}, error) {
 	popularArticles, err := model.GetPopularArticles(10)
 	if err != nil {

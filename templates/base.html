@@ -1,4 +1,4 @@
-{{define "base"}}
+{{define "base.html"}}  <!-- 改为 "base.html" -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -11,8 +11,6 @@
         .logo { font-size: 24px; font-weight: bold; }
         .user-section { display: flex; align-items: center; gap: 15px; }
         .user-section input[type="text"] { padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
-
-        /* 左右布局样式（非首页） */
         .container { display: flex; min-height: calc(100vh - 60px); }
         .sidebar { width: 250px; background: #f8f8f8; padding: 20px; }
         .sidebar nav a { display: block; margin-bottom: 10px; text-decoration: none; color: #333; }
@@ -20,12 +18,9 @@
         .sidebar .popular h3 { margin-bottom: 10px; }
         .sidebar .popular a { display: block; margin-bottom: 5px; text-decoration: none; color: #555; }
         .content { flex: 1; padding: 20px; }
-
-        /* 上下布局样式（首页） */
         .home-nav { background: #f8f8f8; padding: 10px; text-align: center; }
         .home-nav a { margin: 0 15px; text-decoration: none; color: #333; }
         .home-content { padding: 20px; }
-
         footer { background: #f8f8f8; padding: 10px; text-align: center; }
         .article { margin-bottom: 20px; }
         .comment-form textarea { width: 100%; height: 100px; }
@@ -39,12 +34,11 @@
     <div class="user-section">
         <span>{{.UserStatus}}</span>
         <input type="text" placeholder="搜索...">
-        <span>{{.CurrentTime.Format "2006-01-02 15:04:05"}}</span>
+        <span id="time">{{.CurrentTime.Format "2006-01-02 15:04:05"}}</span>
     </div>
 </header>
 
 {{if .IsHomePage}}
-<!-- 首页布局：横向导航栏 + 内容 -->
 <div class="home-nav">
     {{range .NavItems}}
     <a href="{{.Link}}">{{.Name}}</a>
@@ -54,7 +48,6 @@
     {{template "content" .}}
 </div>
 {{else}}
-<!-- 非首页布局：左右排版 -->
 <div class="container">
     <div class="sidebar">
         <nav>
@@ -82,6 +75,7 @@
 <footer>
     <p>© 2025 我的博客</p>
 </footer>
+<script src="/static/js/script.js"></script>
 </body>
 </html>
 {{end}}

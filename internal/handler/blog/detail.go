@@ -1,35 +1,33 @@
 package blog
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"html/template"
 	"net/http"
-	"scsPro/internal/handler"
-	"scsPro/internal/model"
 	"strconv"
 	"time"
+
+	"scsPro/internal/common"
+	"scsPro/internal/model"
+	"github.com/gin-gonic/gin"
 )
 
-func DetailHandler(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.Atoi(r.URL.Query().Get("id"))
+func DetailHandler(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Query("id"))
 	article, err := model.GetArticleByID(uint(id))
 	if err != nil {
-		http.Error(w, "文章不存在: "+err.Error(), http.StatusNotFound)
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "文章不存在: " + err.Error()})
 		return
 	}
 
-	commonData, err := handler.GetCommonData()
+	commonData, err := common.GetCommonData()
 	if err != nil {
-		http.Error(w, "获取公共数据失败: "+err.Error(), http.StatusInternalServerError)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "获取公共数据失败: " + err.Error()})
 		return
 	}
 
 	data := struct {
 		Title           string
 		Article         model.Article
-		NavItems        []handler.Module
+		NavItems        []common.Module
 		PopularArticles []model.Article
 		UserStatus      string
 		CurrentTime     time.Time
@@ -37,52 +35,36 @@ func DetailHandler(w http.ResponseWriter, r *http.Request) {
 	}{
 		Title:           article.Title,
 		Article:         article,
-		NavItems:        commonData["NavItems"].([]handler.Module),
+		NavItems:        commonData["NavItems"].([]common.Module),
 		PopularArticles: commonData["PopularArticles"].([]model.Article),
 		UserStatus:      commonData["UserStatus"].(string),
 		CurrentTime:     commonData["CurrentTime"].(time.Time),
-		IsHomePage:      false, // 非首页
+		IsHomePage:      false,
 	}
 
-	tmpl := template.New("base").Funcs(template.FuncMap{
-		"sub": sub,
-		"add": add,
-	})
-	tmpl, err = tmpl.ParseFiles("templates/base.html", "templates/blog/detail.html")
-	if err != nil {
-		http.Error(w, "模板加载失败: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, "base", data)
-	if err != nil {
-		fmt.Println("模板渲染失败:", err)
-		http.Error(w, "模板渲染失败: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Write(buf.Bytes())
+	c.HTML(http.StatusOK, "base.html", data) // 改为渲染 "base.html"
 }
 
-func CommentHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "仅支持POST请求", http.StatusMethodNotAllowed)
+func CommentHandler(c *gin.Context) {
+	if c.Request.Method != http.MethodPost {
+		c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"error": "仅支持POST请求"})
 		return
 	}
-	articleID, err := strconv.Atoi(r.FormValue("article_id"))
+
+	articleID, err := strconv.Atoi(c.PostForm("article_id"))
 	if err != nil {
-		http.Error(w, "无效的文章ID: "+err.Error(), http.StatusBadRequest)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "无效的文章ID: " + err.Error()})
 		return
 	}
-	parentIDStr := r.FormValue("parent_id")
-	content := r.FormValue("content")
-	username := r.FormValue("username")
+
+	parentIDStr := c.PostForm("parent_id")
+	content := c.PostForm("content")
+	username := c.PostForm("username")
 	if username == "" {
 		username = "匿名用户"
 	}
 	if content == "" {
-		http.Redirect(w, r, "/blog/detail?id="+strconv.Itoa(articleID), http.StatusSeeOther)
+		c.Redirect(http.StatusSeeOther, "/blog/detail?id="+strconv.Itoa(articleID))
 		return
 	}
 
@@ -96,163 +78,90 @@ func CommentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := model.AddComment(uint(articleID), parentID, content, username); err != nil {
-		http.Error(w, "添加评论失败: "+err.Error(), http.StatusInternalServerError)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "添加评论失败: " + err.Error()})
 		return
 	}
 
-	// 直接重新加载文章并渲染
-	article, err := model.GetArticleByID(uint(articleID))
-	if err != nil {
-		http.Error(w, "加载文章失败: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	commonData, err := handler.GetCommonData()
-	if err != nil {
-		http.Error(w, "获取公共数据失败: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	data := struct {
-		Title           string
-		NavItems        []handler.Module
-		PopularArticles []model.Article
-		UserStatus      string
-		CurrentTime     time.Time
-		IsHomePage      bool
-		Article         model.Article
-	}{
-		Title:           article.Title,
-		NavItems:        commonData["NavItems"].([]handler.Module),
-		PopularArticles: commonData["PopularArticles"].([]model.Article),
-		UserStatus:      commonData["UserStatus"].(string),
-		CurrentTime:     commonData["CurrentTime"].(time.Time),
-		IsHomePage:      false,
-		Article:         article,
-	}
-
-	tmpl := template.New("base").Funcs(template.FuncMap{
-		"sub": sub,
-		"add": add,
-	})
-	tmpl, err = tmpl.ParseFiles("templates/base.html", "templates/blog/detail.html")
-	if err != nil {
-		http.Error(w, "模板加载失败: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var buf bytes.Buffer
-	err = tmpl.ExecuteTemplate(&buf, "base", data)
-	if err != nil {
-		http.Error(w, "模板渲染失败: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Write(buf.Bytes())
+	c.Redirect(http.StatusSeeOther, "/blog/detail?id="+strconv.Itoa(articleID))
 }
 
-func LikeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "仅支持POST请求", http.StatusMethodNotAllowed)
+func LikeHandler(c *gin.Context) {
+	if c.Request.Method != http.MethodPost {
+		c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"error": "仅支持POST请求"})
 		return
 	}
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+
+	id, err := strconv.Atoi(c.Query("id"))
 	if err != nil {
-		http.Error(w, "无效的文章ID: "+err.Error(), http.StatusBadRequest)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "无效的文章ID: " + err.Error()})
 		return
 	}
 
 	var article model.Article
 	if err := model.DB.First(&article, id).Error; err != nil {
-		http.Error(w, "文章不存在: "+err.Error(), http.StatusNotFound)
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "文章不存在: " + err.Error()})
 		return
 	}
 
 	article.Likes++
 	if err := model.DB.Save(&article).Error; err != nil {
-		http.Error(w, "点赞失败: "+err.Error(), http.StatusInternalServerError)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "点赞失败: " + err.Error()})
 		return
 	}
 
-	// 返回 JSON 响应
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]interface{}{
-		"success": true,
-		"likes":   article.Likes,
-	}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "响应编码失败: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "likes": article.Likes})
 }
 
-func LikeCommentHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "仅支持POST请求", http.StatusMethodNotAllowed)
+func LikeCommentHandler(c *gin.Context) {
+	if c.Request.Method != http.MethodPost {
+		c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"error": "仅支持POST请求"})
 		return
 	}
-	commentID, err := strconv.Atoi(r.URL.Query().Get("id"))
+
+	commentID, err := strconv.Atoi(c.Query("id"))
 	if err != nil {
-		http.Error(w, "无效的评论ID: "+err.Error(), http.StatusBadRequest)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "无效的评论ID: " + err.Error()})
 		return
 	}
 
 	var comment model.Comment
 	if err := model.DB.First(&comment, commentID).Error; err != nil {
-		http.Error(w, "评论不存在: "+err.Error(), http.StatusNotFound)
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "评论不存在: " + err.Error()})
 		return
 	}
 
 	comment.Likes++
 	if err := model.DB.Save(&comment).Error; err != nil {
-		http.Error(w, "点赞失败: "+err.Error(), http.StatusInternalServerError)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "点赞失败: " + err.Error()})
 		return
 	}
 
-	// 返回 JSON 响应
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]interface{}{
-		"success": true,
-		"likes":   comment.Likes,
-	}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "响应编码失败: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "likes": comment.Likes})
 }
 
-func DislikeCommentHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "仅支持POST请求", http.StatusMethodNotAllowed)
+func DislikeCommentHandler(c *gin.Context) {
+	if c.Request.Method != http.MethodPost {
+		c.AbortWithStatusJSON(http.StatusMethodNotAllowed, gin.H{"error": "仅支持POST请求"})
 		return
 	}
-	commentID, err := strconv.Atoi(r.URL.Query().Get("id"))
+
+	commentID, err := strconv.Atoi(c.Query("id"))
 	if err != nil {
-		http.Error(w, "无效的评论ID: "+err.Error(), http.StatusBadRequest)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "无效的评论ID: " + err.Error()})
 		return
 	}
 
 	var comment model.Comment
 	if err := model.DB.First(&comment, commentID).Error; err != nil {
-		http.Error(w, "评论不存在: "+err.Error(), http.StatusNotFound)
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "评论不存在: " + err.Error()})
 		return
 	}
 
 	comment.Dislikes++
 	if err := model.DB.Save(&comment).Error; err != nil {
-		http.Error(w, "点踩失败: "+err.Error(), http.StatusInternalServerError)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "点踩失败: " + err.Error()})
 		return
 	}
 
-	// 返回 JSON 响应
-	w.Header().Set("Content-Type", "application/json")
-	response := map[string]interface{}{
-		"success":  true,
-		"dislikes": comment.Dislikes,
-	}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "响应编码失败: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "dislikes": comment.Dislikes})
 }
-

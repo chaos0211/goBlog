@@ -1,7 +1,12 @@
+{{define "home.html"}}
+{{template "base" .}}
+{{end}}
+
 {{define "content"}}
 <div class="welcome">
     <h1>欢迎来到我的个人网站</h1>
-    <p>这里是功能模块简介</p>
+    <p>这里是功能模块简介 - {{ .CurrentTime }}</p>
+    <p>用户状态: {{ .UserStatus }}</p>
 </div>
 <div class="modules-grid">
     {{range .Modules}}
@@ -14,10 +19,18 @@
     <p>暂无模块</p>
     {{end}}
 </div>
+<h2>热门文章</h2>
+<ul>
+    {{range .PopularArticles}}
+    <li>{{.Title}} - 阅读量: {{.Views}}</li>
+    {{else}}
+    <p>暂无热门文章</p>
+    {{end}}
+</ul>
 <style>
     .modules-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr); /* 每行3个方块 */
+        grid-template-columns: repeat(3, 1fr);
         gap: 20px;
         margin-top: 20px;
     }
